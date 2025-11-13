@@ -16,18 +16,20 @@ const mapIcon = () =>
     iconSize: [8,8]
   });
 
-function PopupComponent({event=event}) {
+function PopupComponent({event}) {
   console.log("Popup!");
   console.log(event.length);
   return (
-    <>
-    <p>{event.length} events</p>
-    {event.map((ev) => {
-      return(
-        <p>{ev.name}</p>
-      )
-    })}
-    </>
+    <div className="popupUnit">
+      <p>{event.length} events</p>
+      <div className="scrollUnit">
+      {event.map((ev) => {
+        return(
+          <div><p>{ev.name}</p></div>
+        )
+      })}
+      </div>
+    </div>
   )
 }
 
@@ -147,16 +149,16 @@ function EventsComponent() {
     {
     Object.keys(events).map(function(index, number) { //index is place id
       let event = events[index];
-      console.log("ei", event, index);
+      //console.log("ei", event, index);
       const latd = 0.010;
       const lond = 0.030;
-      console.log("toilet");
+      //console.log("toilet");
       if (places[index] !== undefined) {
         let temp = places[index]
-        console.log("first test");
-        console.log(centre.lat, temp.lat);
-        console.log(event);
-        if (Math.abs(temp.lat-centre.lat) <= latd && Math.abs(temp.lon-centre.lng) <= lond || true) {
+        //console.log("first test");
+        //console.log(centre.lat, temp.lat);
+        //console.log(event);
+        if ((Math.abs(temp.lat-centre.lat) <= latd && Math.abs(temp.lon-centre.lng) <= lond) || true) {
           //console.log("ohio toilet");
           //console.log(event.descriptions);
           return (

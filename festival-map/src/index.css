@@ -5,3 +5,17 @@ html, body, #root {
   margin: 0;
   padding: 0;
 }
+
+.popupUnit {
+  margin: 0px;
+}
+
+.scrollUnit {
+  color: black;
+  overflow-y: scroll;
+  max-height: 200px;
+}
+
+p {
+  display: inline;
+}
