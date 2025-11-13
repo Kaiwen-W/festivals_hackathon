@@ -16,7 +16,20 @@ const mapIcon = () =>
     iconSize: [8,8]
   });
 
-
+function PopupComponent({event=event}) {
+  console.log("Popup!");
+  console.log(event.length);
+  return (
+    <>
+    <p>{event.length} events</p>
+    {event.map((ev) => {
+      return(
+        <p>{ev.name}</p>
+      )
+    })}
+    </>
+  )
+}
 
 function EventsComponent() {
 
@@ -115,7 +128,7 @@ function EventsComponent() {
       })
       console.log("dict below");
       console.log(dict);
-      setEvents(info);
+      setEvents(dict);
     })
   },[])
 
@@ -132,27 +145,29 @@ function EventsComponent() {
 
   return (<>
     {
-    events.map((event) => {
+    Object.keys(events).map(function(index, number) { //index is place id
+      let event = events[index];
+      console.log("ei", event, index);
       const latd = 0.010;
       const lond = 0.030;
-      //console.log("toilet");
-      if (places[event.schedules[0].place_id] !== undefined) {
-        let temp = places[event.schedules[0].place_id]
-        //console.log("first test");
-        //console.log(centre.lat, centre.lng);
-        if (Math.abs(temp.lat-centre.lat) <= latd && Math.abs(temp.lon-centre.lng) <= lond) {
-        
+      console.log("toilet");
+      if (places[index] !== undefined) {
+        let temp = places[index]
+        console.log("first test");
+        console.log(centre.lat, temp.lat);
+        console.log(event);
+        if (Math.abs(temp.lat-centre.lat) <= latd && Math.abs(temp.lon-centre.lng) <= lond || true) {
+          //console.log("ohio toilet");
           //console.log(event.descriptions);
           return (
             <Marker
-              key = {event.event_id}
-              name={event.name}
-              position={[temp.lat , temp.lon]}
+              key = {index}
+              position={[temp.lat, temp.lon]}
               icon={mapIcon()}
+              total={event.length}
             >
               <Popup>
-                <strong>{event.name}</strong>
-                <p>{event.descriptions!== undefined ? event.descriptions[0].description : "no description"}</p>
+                <PopupComponent event={event}/>
               </Popup>
             </Marker>
           )
