@@ -16,12 +16,15 @@ const mapIcon = () =>
     iconSize: [8,8]
   });
 
-function PopupComponent({event}) {
+function PopupComponent({event, place}) {
   console.log("Popup!");
-  console.log(event.length);
+  console.log(place);
+  console.log(event);
+  let events = "events";
+  if (event.length === 1) events="event";
   return (
     <div className="popupUnit">
-      <p>{event.length} events</p>
+      <strong>{place.name} </strong><p>{event.length} {events}</p>
       <div className="scrollUnit">
       {event.map((ev) => {
         return(
@@ -50,9 +53,10 @@ function EventsComponent() {
     .then((data) => {
       console.log("Fetched data");
       //console.log(data);
-
+      
       const info = data.places.map((place) => ({
         address: place.address,
+        name: place.name,
         id: place.place_id,
         lat: place.loc.latitude,
         lon: place.loc.longitude,
@@ -161,6 +165,9 @@ function EventsComponent() {
         if ((Math.abs(temp.lat-centre.lat) <= latd && Math.abs(temp.lon-centre.lng) <= lond) || true) {
           //console.log("ohio toilet");
           //console.log(event.descriptions);
+
+          //here should work on filtering etc. then return length of new set of events, and submit those to the
+          //popup for rendering
           return (
             <Marker
               key = {index}
@@ -169,7 +176,7 @@ function EventsComponent() {
               total={event.length}
             >
               <Popup>
-                <PopupComponent event={event}/>
+                <PopupComponent event={event} place={temp}/>
               </Popup>
             </Marker>
           )
