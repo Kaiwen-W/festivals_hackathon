@@ -288,7 +288,7 @@ def aggregate_peak_flows(df_events: pd.DataFrame, bin_size_minutes: int = 15) ->
     df["egress_end"] = df["egress_start"] + pd.to_timedelta(EGRESS_BUFFER_MINUTES, unit="m")
     start_time = df["ingress_start"].min().floor("15T")
     end_time = df["egress_end"].max().ceil("15T")
-    bins = pd.date_range(start=start_time, end=end_time, freq=f"{bin_size_minutes}T")
+    bins = pd.date_range(start=start_time, end=end_time, freq=f"{bin_size_minutes}T") 
     inflow = pd.Series(0, index=bins)
     outflow = pd.Series(0, index=bins)
     for _, row in df.iterrows():
