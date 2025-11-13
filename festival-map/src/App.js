@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import "react-datepicker/dist/react-datepicker.css";
+import DatePicker from "react-datepicker";
 import L from "leaflet";
+
 //import logo from './logo.svg';
 import './App.css';
 
@@ -13,12 +16,32 @@ const mapIcon = () =>
       border-radius: 50%;
       border:2px solid white;
       background: blue"></div>`,
-    iconSize: [8,8]
+    iconSize: [12,12]
   });
 
+function PopupComponent({event, place}) {
+  console.log("Popup!");
+  console.log(place);
+  console.log(event);
+  let events = "events";
+  if (event.length === 1) events="event";
+  return (
+    <div className="popupUnit">
+      <strong>{place.name} </strong><p>{event.length} {events}</p>
+      <div className="scrollUnit">
+      {event.map((ev) => {
+        var myDate = new Date(ev.start_ts);
+        var dated = myDate.toLocaleString();
+        return(
+          <div><p>{ev.name} {dated}</p></div>
+        )
+      })}
+      </div>
+    </div>
+  )
+}
 
-
-function EventsComponent() {
+function EventsComponent({sdate, edate}) {
 
   const [places, setPlaces] = useState([]);
   const [events, setEvents] = useState([]);
@@ -35,9 +58,10 @@ function EventsComponent() {
     .then((data) => {
       console.log("Fetched data");
       //console.log(data);
-
+      
       const info = data.places.map((place) => ({
         address: place.address,
+        name: place.name,
         id: place.place_id,
         lat: place.loc.latitude,
         lon: place.loc.longitude,
@@ -86,6 +110,25 @@ function EventsComponent() {
     return filtered
   }
 
+  function validEvent(event) {
+    
+    var validated = []
+    //console.log(event);
+    //console.log(typeof(event));
+    event.forEach((ev, index) => {
+      //console.log(ev);
+      var start = new Date(ev.start_ts);
+      //var end = new Date(ev.end_ts);
+
+      //console.log(start, end);
+      //console.log(sdate, edate);
+      if (start >= sdate && start <= edate) {
+        validated.push(ev);
+      } //therefore valid as after start date and before end date
+    });
+    return validated;
+  }
+
   useEffect(() => {
     fetch('thistle_data.json',{
       headers : { 
@@ -115,7 +158,7 @@ function EventsComponent() {
       })
       console.log("dict below");
       console.log(dict);
-      setEvents(info);
+      setEvents(dict);
     })
   },[])
 
@@ -132,30 +175,39 @@ function EventsComponent() {
 
   return (<>
     {
-    events.map((event) => {
+    Object.keys(events).map(function(index, number) { //index is place id
+      let event = events[index];
+      //console.log("ei", event, index);
       const latd = 0.010;
       const lond = 0.030;
       //console.log("toilet");
-      if (places[event.schedules[0].place_id] !== undefined) {
-        let temp = places[event.schedules[0].place_id]
+      if (places[index] !== undefined) {
+        let temp = places[index]
         //console.log("first test");
-        //console.log(centre.lat, centre.lng);
-        if (Math.abs(temp.lat-centre.lat) <= latd && Math.abs(temp.lon-centre.lng) <= lond) {
-        
+        //console.log(centre.lat, temp.lat);
+        //console.log(event);
+        if ((Math.abs(temp.lat-centre.lat) <= latd && Math.abs(temp.lon-centre.lng) <= lond) || true) {
+          //console.log("ohio toilet");
           //console.log(event.descriptions);
-          return (
-            <Marker
-              key = {event.event_id}
-              name={event.name}
-              position={[temp.lat , temp.lon]}
-              icon={mapIcon()}
-            >
-              <Popup>
-                <strong>{event.name}</strong>
-                <p>{event.descriptions!== undefined ? event.descriptions[0].description : "no description"}</p>
-              </Popup>
-            </Marker>
-          )
+          let validEvents = validEvent(event);
+
+          //here should work on filtering etc. then return length of new set of events, and submit those to the
+          //popup for rendering
+          if (validEvents.length > 0) {
+            return (
+              <Marker
+                key = {index}
+                position={[temp.lat, temp.lon]}
+                icon={mapIcon()}
+                total={validEvents.length}
+              >
+                <Popup>
+                  <PopupComponent event={validEvents} place={temp}/>
+                </Popup>
+              </Marker>
+            )
+          }
+          else return null;
         }
         else return null;
       }
@@ -166,24 +218,51 @@ function EventsComponent() {
   )
 }
 
+function DateComponent({sdate, setsDate,edate, seteDate}) {
 
-export default function App() {
-
-
-  
 
   return (
+    <div className="menu" style={{padding: "20px"}}>
+
+      <DatePicker enableTabLoop={false} style={{zIndex: 10}} selected={sdate} onChange={(sdate) => setsDate(sdate)} />
+      <DatePicker enableTabLoop={false} style={{zIndex: 10}} selected={edate} onChange={(edate) => seteDate(edate)} />
+
+    </div>
+  );
+}
+
+export default function App() {
+  const [sdate, setsDate] = useState(new Date());
+  const [edate, seteDate] = useState(new Date());
+
+
+  return (
+    <>
+    
+    <DateComponent
+     sdate={sdate} 
+     setsDate={setsDate}
+     edate={edate}
+     seteDate={seteDate}
+     style={{minHeight: "40px", margin: "2px"}}
+      
+    />
+
     <MapContainer
       center={[55.89, -3.72]}
       zoom={10}
-      style={{width: "100%", height: "100vh"}}
+      style={{width: "100%", height: "100vh", zIndex: "0"}}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      <EventsComponent />
+      <EventsComponent 
+        sdate={sdate}
+        edate={edate}
+      />
 
     </MapContainer>
+    </>
   );
 }
