@@ -16,7 +16,7 @@ const mapIcon = () =>
       border-radius: 50%;
       border:2px solid white;
       background: blue"></div>`,
-    iconSize: [8,8]
+    iconSize: [12,12]
   });
 
 function PopupComponent({event, place}) {
@@ -30,8 +30,10 @@ function PopupComponent({event, place}) {
       <strong>{place.name} </strong><p>{event.length} {events}</p>
       <div className="scrollUnit">
       {event.map((ev) => {
+        var myDate = new Date(ev.start_ts);
+        var dated = myDate.toLocaleString();
         return(
-          <div><p>{ev.name} {ev.start_ts}</p></div>
+          <div><p>{ev.name} {dated}</p></div>
         )
       })}
       </div>
@@ -39,7 +41,7 @@ function PopupComponent({event, place}) {
   )
 }
 
-function EventsComponent() {
+function EventsComponent({sdate, edate}) {
 
   const [places, setPlaces] = useState([]);
   const [events, setEvents] = useState([]);
@@ -108,6 +110,25 @@ function EventsComponent() {
     return filtered
   }
 
+  function validEvent(event) {
+    
+    var validated = []
+    //console.log(event);
+    //console.log(typeof(event));
+    event.forEach((ev, index) => {
+      //console.log(ev);
+      var start = new Date(ev.start_ts);
+      //var end = new Date(ev.end_ts);
+
+      //console.log(start, end);
+      //console.log(sdate, edate);
+      if (start >= sdate && start <= edate) {
+        validated.push(ev);
+      } //therefore valid as after start date and before end date
+    });
+    return validated;
+  }
+
   useEffect(() => {
     fetch('thistle_data.json',{
       headers : { 
@@ -168,21 +189,25 @@ function EventsComponent() {
         if ((Math.abs(temp.lat-centre.lat) <= latd && Math.abs(temp.lon-centre.lng) <= lond) || true) {
           //console.log("ohio toilet");
           //console.log(event.descriptions);
+          let validEvents = validEvent(event);
 
           //here should work on filtering etc. then return length of new set of events, and submit those to the
           //popup for rendering
-          return (
-            <Marker
-              key = {index}
-              position={[temp.lat, temp.lon]}
-              icon={mapIcon()}
-              total={event.length}
-            >
-              <Popup>
-                <PopupComponent event={event} place={temp}/>
-              </Popup>
-            </Marker>
-          )
+          if (validEvents.length > 0) {
+            return (
+              <Marker
+                key = {index}
+                position={[temp.lat, temp.lon]}
+                icon={mapIcon()}
+                total={validEvents.length}
+              >
+                <Popup>
+                  <PopupComponent event={validEvents} place={temp}/>
+                </Popup>
+              </Marker>
+            )
+          }
+          else return null;
         }
         else return null;
       }
@@ -197,9 +222,9 @@ function DateComponent({sdate, setsDate,edate, seteDate}) {
 
 
   return (
-    <div style={{zIndex: 10, display: "flexbox", justifyContent: "space-between", height: "100px", width: "100%"}}>
+    <div className="menu" style={{padding: "20px"}}>
+
       <DatePicker enableTabLoop={false} style={{zIndex: 10}} selected={sdate} onChange={(sdate) => setsDate(sdate)} />
-        <p> </p>
       <DatePicker enableTabLoop={false} style={{zIndex: 10}} selected={edate} onChange={(edate) => seteDate(edate)} />
 
     </div>
@@ -210,16 +235,6 @@ export default function App() {
   const [sdate, setsDate] = useState(new Date());
   const [edate, seteDate] = useState(new Date());
 
-  const handleSelect = (date) =>{
-    console.log(date); 
-  };
-
-  
-  const selectionRange = {
-    //startDate: new Date(),
-    //endDate: new Date(),
-    key: 'selection',
-  }
 
   return (
     <>
@@ -242,7 +257,10 @@ export default function App() {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      <EventsComponent />
+      <EventsComponent 
+        sdate={sdate}
+        edate={edate}
+      />
 
     </MapContainer>
     </>
