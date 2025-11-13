@@ -16,6 +16,14 @@ html, body, #root {
   max-height: 200px;
 }
 
+.menu {
+  z-index: 10;
+  display: "flexbox";
+  justify-content: "space-between";
+  height: "50px";
+  width: "100%";
+}
+
 p {
   display: inline;
 }

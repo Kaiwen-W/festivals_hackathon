@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import "react-datepicker/dist/react-datepicker.css";
+import DatePicker from "react-datepicker";
 import L from "leaflet";
+
 //import logo from './logo.svg';
 import './App.css';
 
@@ -28,7 +31,7 @@ function PopupComponent({event, place}) {
       <div className="scrollUnit">
       {event.map((ev) => {
         return(
-          <div><p>{ev.name}</p></div>
+          <div><p>{ev.name} {ev.start_ts}</p></div>
         )
       })}
       </div>
@@ -190,17 +193,50 @@ function EventsComponent() {
   )
 }
 
+function DateComponent({sdate, setsDate,edate, seteDate}) {
 
-export default function App() {
-
-
-  
 
   return (
+    <div style={{zIndex: 10, display: "flexbox", justifyContent: "space-between", height: "100px", width: "100%"}}>
+      <DatePicker enableTabLoop={false} style={{zIndex: 10}} selected={sdate} onChange={(sdate) => setsDate(sdate)} />
+        <p> </p>
+      <DatePicker enableTabLoop={false} style={{zIndex: 10}} selected={edate} onChange={(edate) => seteDate(edate)} />
+
+    </div>
+  );
+}
+
+export default function App() {
+  const [sdate, setsDate] = useState(new Date());
+  const [edate, seteDate] = useState(new Date());
+
+  const handleSelect = (date) =>{
+    console.log(date); 
+  };
+
+  
+  const selectionRange = {
+    //startDate: new Date(),
+    //endDate: new Date(),
+    key: 'selection',
+  }
+
+  return (
+    <>
+    
+    <DateComponent
+     sdate={sdate} 
+     setsDate={setsDate}
+     edate={edate}
+     seteDate={seteDate}
+     style={{minHeight: "40px", margin: "2px"}}
+      
+    />
+
     <MapContainer
       center={[55.89, -3.72]}
       zoom={10}
-      style={{width: "100%", height: "100vh"}}
+      style={{width: "100%", height: "100vh", zIndex: "0"}}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -209,5 +245,6 @@ export default function App() {
       <EventsComponent />
 
     </MapContainer>
+    </>
   );
 }
