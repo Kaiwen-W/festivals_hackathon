@@ -8,18 +8,65 @@ import L from "leaflet";
 import './App.css';
 
 
-const mapIcon = () => 
+const mapIcon = (colour) => 
   L.divIcon({
     className: "eventPoint",
     html: `<div style="
       width: 8px; height: 8px;
       border-radius: 50%;
       border:2px solid white;
-      background: blue"></div>`,
+      background:${colour || "green"};
+
+      color: blue"></div>`,
     iconSize: [12,12]
   });
 
-function PopupComponent({event, place}) {
+function fetchh(id, setBus) {
+  console.log("id",id)
+  let word = "http://localhost:8000/event/"+id;
+  console.log(word);
+  fetch(word)
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("data", data); //fetching works
+      setBus(data);
+  });
+}
+
+function VehicleComponent({bus}) {
+  console.log("rendering buses!!!")
+  console.log("Buses", bus);
+  if (bus.nearby_stops) {
+        return (<>
+        {
+          bus.nearby_stops.map((st,index) => {
+            console.log("stop:", st);
+            return (
+              <Marker
+                key={index}
+                position={[st.latitude,st.longitude]}
+                icon={mapIcon("red")}
+              >
+                <Popup><st>{st.stop_name}</st><p> is {st.distance_meters}m away</p>
+                  <br></br><p>Routes include {st.bus_services}</p>
+                  <br></br><p>{st.percentage_of_total}% of total capacity</p>
+                  <br></br><p>{st.expected_passengers} people</p>
+                  
+
+                  
+                </Popup>
+              </Marker>
+            )
+          })
+        }</>)
+      }
+      else {
+        console.log("didnt work");
+        return null;
+      }
+}
+
+function PopupComponent({event, place, setBus}) {
   console.log("Popup!");
   console.log(place);
   console.log(event);
@@ -32,8 +79,9 @@ function PopupComponent({event, place}) {
       {event.map((ev) => {
         var myDate = new Date(ev.start_ts);
         var dated = myDate.toLocaleString();
+        console.log(ev);
         return(
-          <div><p>{ev.name} {dated}</p></div>
+          <div><p>{ev.name} {dated}</p> <button onClick={() => fetchh(ev.event_id, setBus)}>Details</button></div>
         )
       })}
       </div>
@@ -41,11 +89,17 @@ function PopupComponent({event, place}) {
   )
 }
 
-function EventsComponent({sdate, edate}) {
+function EventsComponent({sdate, edate, setBus}) {
 
   const [places, setPlaces] = useState([]);
   const [events, setEvents] = useState([]);
   const [centre, setCentre] = useState([55.95, -3.18]);
+
+
+  useEffect(() => {
+    fetchh(1, setBus);
+  }, []);
+
   //const [zoom, setZoom] = useState(12);
   useEffect(() => { //places data
     fetch('thistle_data.json',{
@@ -107,7 +161,7 @@ function EventsComponent({sdate, edate}) {
       place: place.place
     }
 
-    return filtered
+    return filtered;
   }
 
   function validEvent(event) {
@@ -198,11 +252,11 @@ function EventsComponent({sdate, edate}) {
               <Marker
                 key = {index}
                 position={[temp.lat, temp.lon]}
-                icon={mapIcon()}
+                icon={mapIcon("blue")}
                 total={validEvents.length}
               >
                 <Popup>
-                  <PopupComponent event={validEvents} place={temp}/>
+                  <PopupComponent event={validEvents} place={temp} setBus={setBus}/>
                 </Popup>
               </Marker>
             )
@@ -218,7 +272,7 @@ function EventsComponent({sdate, edate}) {
   )
 }
 
-function DateComponent({sdate, setsDate,edate, seteDate}) {
+function DateComponent({sdate, setsDate,edate, seteDate, bus}) {
 
 
   return (
@@ -234,35 +288,39 @@ function DateComponent({sdate, setsDate,edate, seteDate}) {
 export default function App() {
   const [sdate, setsDate] = useState(new Date());
   const [edate, seteDate] = useState(new Date());
+  const [bus, setBus] = useState([]);
 
 
   return (
     <>
     
-    <DateComponent
-     sdate={sdate} 
-     setsDate={setsDate}
-     edate={edate}
-     seteDate={seteDate}
-     style={{minHeight: "40px", margin: "2px"}}
-      
-    />
-
-    <MapContainer
-      center={[55.89, -3.72]}
-      zoom={10}
-      style={{width: "100%", height: "100vh", zIndex: "0"}}
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      <DateComponent
+      sdate={sdate} 
+      setsDate={setsDate}
+      edate={edate}
+      seteDate={seteDate}
+      bus={bus}
+      style={{minHeight: "40px", height: "40px", margin: "2px"}}
+        
       />
+      <div style={{width: "100%", height: "100%", margin: "auto"}}>
+        <MapContainer
+          center={[55.89, -3.72]}
+          zoom={10}
+          style={{width: "100%", zIndex: "0", height: "100%"}}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <VehicleComponent bus={bus}/>
+          <EventsComponent 
+            sdate={sdate}
+            edate={edate}
+            setBus={setBus}
+          />
 
-      <EventsComponent 
-        sdate={sdate}
-        edate={edate}
-      />
-
-    </MapContainer>
+        </MapContainer>
+      </div>
     </>
   );
 }
