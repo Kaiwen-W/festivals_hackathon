@@ -3,6 +3,8 @@ Transport optimisation for Festival Ecosystem using local JSON events file.
 Includes ingestion, processing, recommendation engine and API endpoints.
 """
 
+# Estimate the affected routes based on events
+
 import os
 import logging
 #import requests  # Commented for offline use
@@ -32,6 +34,7 @@ PRIME_TIME_START_HOUR = 18
 PRIME_TIME_END_HOUR = 23
 
 
+
 # TransportAPI client (offline dummy)
 class TransportAPIClient:
     #BASE_URL = "https://transportapi.com/v3/uk/bus"  # Commented for offline
@@ -59,17 +62,7 @@ class TransportAPIClient:
 
 # Helpers
 def _coerce_datetime(x) -> datetime:
-    if isinstance(x, datetime):
-        return x
-    try:
-        return datetime.fromisoformat(str(x).replace("Z", "+00:00"))
-    except:
-        return datetime.utcnow()
-
-def is_prime_time(dt: datetime) -> bool:
-    return PRIME_TIME_START_HOUR <= dt.hour < PRIME_TIME_END_HOUR
-
-def _coerce_datetime(x) -> datetime:
+    # Try to parse if not already a datetime
     if isinstance(x, datetime):
         dt = x
     else:
@@ -77,10 +70,18 @@ def _coerce_datetime(x) -> datetime:
             dt = datetime.fromisoformat(str(x).replace("Z", "+00:00"))
         except:
             dt = datetime.utcnow().replace(tzinfo=timezone.utc)
-    # make sure it’s aware
+
+    # Ensure timezone-aware
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
+
     return dt
+
+
+def is_prime_time(dt: datetime) -> bool:
+    return PRIME_TIME_START_HOUR <= dt.hour < PRIME_TIME_END_HOUR
+
+
 
 # Event ingestion
 def load_events_from_json(json_file: str, start_date=None, end_date=None) -> pd.DataFrame:

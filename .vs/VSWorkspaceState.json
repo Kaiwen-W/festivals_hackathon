@@ -1,7 +1,9 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\web-app",
+    "\\web-app\\assets"
   ],
-  "SelectedNode": "\\C:\\Users\\bogon\\Source\\Repos\\festivals_hackathon",
+  "SelectedNode": "\\web-app\\assets\\styles.css",
   "PreviewInSolutionExplorer": false
 }
